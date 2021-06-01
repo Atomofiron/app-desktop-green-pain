@@ -7,6 +7,8 @@ class ViewModel {
         private set
     var btnText: String by mutableStateOf("")
         private set
+    var devices: List<Device>? by mutableStateOf(null)
+        private set
 
     init {
         update(AppState.DisconnectDevice)
@@ -16,6 +18,7 @@ class ViewModel {
         appState = state
         topText = state.topText
         btnText = state.btnText
+        devices = state.devices
     }
 
     fun toDisconnectDeviceState() = update(AppState.DisconnectDevice)

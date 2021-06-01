@@ -19,15 +19,17 @@ class Presenter(private val viewModel: ViewModel) {
                 }
             }
             AppState.DeviceNotFound -> viewModel.toDisconnectDeviceState()
-            is AppState.ChooseDevice -> {
-                // todo
-            }
-            is AppState.ConfirmDevice -> {
-                addDeviceToSystemRules(state.device)
-                viewModel.toFinalState()
-            }
+            is AppState.ChooseDevice -> viewModel.toDisconnectDeviceState()
+            is AppState.ConfirmDevice -> confirmDevice(state.device)
             AppState.FinalState -> exitProcess(0)
         }
+    }
+
+    fun onDeviceClick(device: Device) = confirmDevice(device)
+
+    private fun confirmDevice(device: Device) {
+        addDeviceToSystemRules(device)
+        viewModel.toFinalState()
     }
 
     private fun discoverDevices(): List<Device>? {

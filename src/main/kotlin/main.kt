@@ -1,5 +1,8 @@
 import androidx.compose.desktop.Window
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,31 +22,69 @@ fun main() = Window(
     size = IntSize(320.dpSize, 320.dpSize),
 ) {
     Box(
-        modifier = Modifier.fillMaxSize().padding(8.dp),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom,
-        ) {
-            content()
-        }
+        content()
+        button()
     }
 }
 
 @Composable
 fun content() {
-    Text(
-        viewModel.topText,
-        modifier = Modifier.fillMaxHeight(0.5f).padding(8.dp),
-        style = TextStyle(textAlign = TextAlign.Center),
-    )
-    Button(
-        modifier = Modifier.padding(8.dp),
-        onClick = presenter::onButtonClick
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(viewModel.btnText)
+        title()
+        list()
     }
 }
 
+@Composable
+fun title() = Card(
+    elevation = 5.dp,
+    // padding(bottom = 4.dp) is a bad idea, but this is the best solution now
+    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+) {
+    Text(
+        viewModel.topText,
+        modifier = Modifier.padding(16.dp),
+        style = TextStyle(textAlign = TextAlign.Center),
+    )
+}
+
+@Composable
+fun list() = viewModel.devices?.let { devices ->
+    LazyColumn(
+        contentPadding = PaddingValues(bottom = 72.dp),
+    ) {
+        items(devices) { device ->
+            listItem(device)
+        }
+    }
+}
+
+@Composable
+fun listItem(device: Device) = Card(
+    elevation = 4.dp,
+    modifier = Modifier.fillMaxWidth()
+        .padding(start = 16.dp, top = 16.dp, end = 16.dp)
+        .clickable(onClick = {
+            presenter.onDeviceClick(device)
+        }),
+) {
+    Text(
+        device.name,
+        modifier = Modifier.padding(8.dp),
+    )
+}
+
+@Composable
+fun button() = Button(
+    modifier = Modifier.padding(16.dp),
+    onClick = presenter::onButtonClick,
+) {
+    Text(viewModel.btnText)
+}
 

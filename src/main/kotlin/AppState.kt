@@ -1,6 +1,7 @@
 sealed class AppState(
     val topText: String,
     val btnText: String,
+    val devices: List<Device>? = null,
 ) {
     object DisconnectDevice : AppState(
         "Отключите Android-устройство от компьютера",
@@ -14,13 +15,15 @@ sealed class AppState(
         "Новых устройств не было найдено",
         "Ок",
     )
-    class ChooseDevice(val targetDevices: List<Device>) : AppState(
+    class ChooseDevice(targetDevices: List<Device>) : AppState(
         "Выберете целевое Android-устройство",
         "Отмена",
+        devices = targetDevices,
     )
     class ConfirmDevice(val device: Device) : AppState(
-        "Устройство определено верно?\n${device.name}",
+        "Устройство определено верно?",
         "Да",
+        devices = listOf(device),
     )
     object FinalState : AppState(
         "Теперь должно работать",
