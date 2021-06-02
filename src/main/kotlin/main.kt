@@ -3,6 +3,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +27,7 @@ fun main() = Window(
         contentAlignment = Alignment.BottomCenter,
     ) {
         content()
-        button()
+        controls()
     }
 }
 
@@ -81,6 +82,12 @@ fun listItem(device: Device) = Card(
 }
 
 @Composable
+fun controls() = when (val password = viewModel.password) {
+    null -> button()
+    else -> passwordField(password)
+}
+
+@Composable
 fun button() = Button(
     modifier = Modifier.padding(16.dp),
     onClick = presenter::onButtonClick,
@@ -88,3 +95,14 @@ fun button() = Button(
     Text(viewModel.btnText)
 }
 
+@Composable
+fun passwordField(password: String) = TextField(
+    password,
+    modifier = Modifier.padding(16.dp),
+    onValueChange = presenter::onPasswordInput,
+    keyboardActions = KeyboardActions(
+        onDone = {
+            presenter.onPasswordConfirm()
+        }
+    )
+)

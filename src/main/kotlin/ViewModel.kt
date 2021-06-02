@@ -9,6 +9,8 @@ class ViewModel {
         private set
     var devices: List<Device>? by mutableStateOf(null)
         private set
+    var password: String? by mutableStateOf(null)
+        private set
 
     init {
         update(AppState.DisconnectDevice)
@@ -19,6 +21,7 @@ class ViewModel {
         topText = state.topText
         btnText = state.btnText
         devices = state.devices
+        password = state.sudoPassword
     }
 
     fun toDisconnectDeviceState() = update(AppState.DisconnectDevice)

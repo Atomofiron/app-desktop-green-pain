@@ -3,6 +3,8 @@ import kotlin.system.exitProcess
 
 class Presenter(private val viewModel: ViewModel) {
 
+    private var sudoPassword: String = ""
+
     fun onButtonClick() {
         when (val state = viewModel.appState) {
             AppState.DisconnectDevice -> {
@@ -26,6 +28,14 @@ class Presenter(private val viewModel: ViewModel) {
     }
 
     fun onDeviceClick(device: Device) = confirmDevice(device)
+
+    fun onPasswordInput(password: String) {
+        sudoPassword = password
+    }
+
+    fun onPasswordConfirm() {
+        addDeviceToSystemRules(viewModel.devices!!.first())
+    }
 
     private fun confirmDevice(device: Device) {
         addDeviceToSystemRules(device)
@@ -56,10 +66,16 @@ class Presenter(private val viewModel: ViewModel) {
 
     private fun findTargetDevices(extraDevices: List<Device>, allDevices: List<Device>): List<Device> {
         return allDevices.filter { !extraDevices.contains(it) }
+            .toMutableList().apply {
+                add(Device("1234", "Oneplus 7T"))
+            }
     }
 
     private fun addDeviceToSystemRules(device: Device) {
         //etc/udev/rules.d/51-android.rules
         //SUBSYSTEM=="usb", ATTR{idVendor}=="2a70", MODE="0666", GROUP="plugdev", SYMLINK+="android%n"
+        val result = Shell.exec("sudo ls")
+        println("output ${result.output}")
+        println("error ${result.error}")
     }
 }
