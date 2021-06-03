@@ -1,4 +1,5 @@
 import Commands.LSUSB
+import java.lang.IllegalStateException
 import kotlin.system.exitProcess
 
 class Presenter(private val viewModel: ViewModel) {
@@ -38,8 +39,17 @@ class Presenter(private val viewModel: ViewModel) {
     }
 
     private fun confirmDevice(device: Device) {
-        addDeviceToSystemRules(device)
-        viewModel.toFinalState()
+        if (sudoPassword.isEmpty()) {
+            var state = viewModel.appState
+            state = when (state) {
+                is AppState.ChooseDevice -> state.withPassword()
+                is AppState.ConfirmDevice -> state.withPassword()
+                else -> throw IllegalStateException()
+            }
+            viewModel.toState(state)
+        } else {
+            addDeviceToSystemRules(device)
+        }
     }
 
     private fun discoverDevices(): List<Device>? {

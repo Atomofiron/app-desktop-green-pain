@@ -83,8 +83,8 @@ fun listItem(device: Device) = Card(
 
 @Composable
 fun controls() = when (val password = viewModel.password) {
-    null -> button()
-    else -> passwordField(password)
+    password -> passwordField()
+    else -> button()
 }
 
 @Composable
@@ -96,8 +96,8 @@ fun button() = Button(
 }
 
 @Composable
-fun passwordField(password: String) = TextField(
-    password,
+fun passwordField() = TextField(
+    "",
     modifier = Modifier.padding(16.dp),
     onValueChange = presenter::onPasswordInput,
     keyboardActions = KeyboardActions(
