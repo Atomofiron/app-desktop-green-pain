@@ -4,11 +4,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -82,8 +87,8 @@ fun listItem(device: Device) = Card(
 }
 
 @Composable
-fun controls() = when (val password = viewModel.password) {
-    password -> passwordField()
+fun controls() = when {
+    viewModel.password -> passwordField()
     else -> button()
 }
 
@@ -96,13 +101,50 @@ fun button() = Button(
 }
 
 @Composable
-fun passwordField() = TextField(
-    "",
-    modifier = Modifier.padding(16.dp),
-    onValueChange = presenter::onPasswordInput,
-    keyboardActions = KeyboardActions(
-        onDone = {
-            presenter.onPasswordConfirm()
-        }
+fun passwordField() {
+    var value by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    TextField(
+        value,
+        label = { Text(
+            when {
+                viewModel.sudoPasswordError -> "sudo: incorrect password"
+                else -> "sudo password"
+            }
+        )},
+        isError = viewModel.sudoPasswordError,
+        textStyle = TextStyle.Default.copy(),
+        visualTransformation = PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+        singleLine = true,
+        onValueChange = {
+            value = it
+            presenter.onPasswordInput(it)
+        },
+        keyboardActions = KeyboardActions(
+            onDone = {
+                presenter.onPasswordConfirm()
+            },
+        ),
+        modifier = Modifier.padding(16.dp).focusRequester(focusRequester).onKeyEvent {
+            val isEnter = it.key == Key.Enter
+            if (isEnter && it.type == KeyEventType.KeyDown) {
+                presenter.onPasswordConfirm()
+            }
+            isEnter
+        },
     )
-)
+    post {
+        focusRequester.requestFocus()
+    }
+}
+
+@Composable
+private fun post(action: () -> Unit) {
+    DisposableEffect(Unit) {
+        action()
+        onDispose { }
+    }
+}
+
+

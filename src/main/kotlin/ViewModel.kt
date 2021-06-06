@@ -1,4 +1,5 @@
 import androidx.compose.runtime.*
+import java.lang.IllegalStateException
 
 class ViewModel {
     lateinit var appState: AppState
@@ -11,6 +12,8 @@ class ViewModel {
         private set
     var password: Boolean by mutableStateOf(false)
         private set
+    var sudoPasswordError: Boolean by mutableStateOf(false)
+        private set
 
     init {
         update(AppState.DisconnectDevice)
@@ -22,9 +25,8 @@ class ViewModel {
         btnText = state.btnText
         devices = state.devices
         password = state.sudoPassword
+        sudoPasswordError = state.sudoPasswordError
     }
-
-    fun toState(state: AppState) = update(state)
 
     fun toDisconnectDeviceState() = update(AppState.DisconnectDevice)
 
@@ -39,6 +41,14 @@ class ViewModel {
     fun toFinalState() = update(AppState.FinalState)
 
     fun toErrorState(message: String) = update(AppState.ErrorState(message))
+
+    fun withPassword(isError: Boolean = false) {
+        when (val state = appState) {
+            is AppState.ChooseDevice -> state.withPassword(isError)
+            is AppState.ConfirmDevice -> state.withPassword(isError)
+            else -> throw IllegalStateException()
+        }.let { update(it) }
+    }
 }
 
 

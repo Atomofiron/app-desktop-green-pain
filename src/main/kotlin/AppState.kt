@@ -3,6 +3,7 @@ sealed class AppState(
     val btnText: String,
     val devices: List<Device>? = null,
     val sudoPassword: Boolean = false,
+    val sudoPasswordError: Boolean = false,
 ) {
     object DisconnectDevice : AppState(
         "Отключите Android-устройство от компьютера",
@@ -16,24 +17,34 @@ sealed class AppState(
         "Новых устройств не было найдено",
         "Ок",
     )
-    class ChooseDevice(targetDevices: List<Device>, sudoPassword: Boolean = false) : AppState(
+    class ChooseDevice(
+        targetDevices: List<Device>,
+        sudoPassword: Boolean = false,
+        sudoPasswordError: Boolean = false,
+    ) : AppState(
         "Выберете целевое Android-устройство",
         "Отмена",
         devices = targetDevices,
         sudoPassword = sudoPassword,
+        sudoPasswordError = sudoPasswordError,
     ) {
-        fun withPassword() = ChooseDevice(devices!!, true)
+        fun withPassword(isError: Boolean) = ChooseDevice(devices!!, sudoPassword = true, isError)
     }
-    class ConfirmDevice(val device: Device, sudoPassword: Boolean = false) : AppState(
+    class ConfirmDevice(
+        val device: Device,
+        sudoPassword: Boolean = false,
+        sudoPasswordError: Boolean = false,
+    ) : AppState(
         "Устройство определено верно?",
         "Да",
         devices = listOf(device),
         sudoPassword = sudoPassword,
+        sudoPasswordError = sudoPasswordError,
     ) {
-        fun withPassword() = ConfirmDevice(device, true)
+        fun withPassword(isError: Boolean) = ConfirmDevice(device, sudoPassword = true, isError)
     }
     object FinalState : AppState(
-        "Теперь должно работать",
+        "Переподключите Android-устройство. Теперь должно работать",
         "Выйти",
     )
     class ErrorState(message: String) : AppState(message, "Понятно")

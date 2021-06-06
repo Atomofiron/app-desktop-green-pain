@@ -1,8 +1,10 @@
 import Commands.LSUSB
-import java.lang.IllegalStateException
 import kotlin.system.exitProcess
 
 class Presenter(private val viewModel: ViewModel) {
+    companion object {
+        private const val RULES_FILE_PATH = "/etc/udev/rules.d/51-android.rules"
+    }
 
     private var sudoPassword: String = ""
 
@@ -24,6 +26,7 @@ class Presenter(private val viewModel: ViewModel) {
             AppState.DeviceNotFound -> viewModel.toDisconnectDeviceState()
             is AppState.ChooseDevice -> viewModel.toDisconnectDeviceState()
             is AppState.ConfirmDevice -> confirmDevice(state.device)
+            is AppState.ErrorState -> viewModel.toDisconnectDeviceState()
             AppState.FinalState -> exitProcess(0)
         }
     }
@@ -32,24 +35,21 @@ class Presenter(private val viewModel: ViewModel) {
 
     fun onPasswordInput(password: String) {
         sudoPassword = password
+        viewModel.withPassword(isError = false)
     }
 
-    fun onPasswordConfirm() {
-        addDeviceToSystemRules(viewModel.devices!!.first())
-    }
-
-    private fun confirmDevice(device: Device) {
-        if (sudoPassword.isEmpty()) {
-            var state = viewModel.appState
-            state = when (state) {
-                is AppState.ChooseDevice -> state.withPassword()
-                is AppState.ConfirmDevice -> state.withPassword()
-                else -> throw IllegalStateException()
-            }
-            viewModel.toState(state)
-        } else {
-            addDeviceToSystemRules(device)
+    fun onPasswordConfirm() = when {
+        sudoPassword.isEmpty() -> Unit
+        Shell.sudo(sudoPassword) -> addDeviceToSystemRules(viewModel.devices!!.first())
+        else -> {
+            sudoPassword = ""
+            viewModel.withPassword(isError = true)
         }
+    }
+
+    private fun confirmDevice(device: Device) = when {
+        sudoPassword.isEmpty() -> viewModel.withPassword()
+        else -> addDeviceToSystemRules(device)
     }
 
     private fun discoverDevices(): List<Device>? {
@@ -82,10 +82,28 @@ class Presenter(private val viewModel: ViewModel) {
     }
 
     private fun addDeviceToSystemRules(device: Device) {
-        //etc/udev/rules.d/51-android.rules
-        //SUBSYSTEM=="usb", ATTR{idVendor}=="2a70", MODE="0666", GROUP="plugdev", SYMLINK+="android%n"
-        val result = Shell.exec("sudo ls")
-        println("output ${result.output}")
-        println("error ${result.error}")
+        val rule = "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"${device.idVendor}\", MODE=\"0666\", GROUP=\"plugdev\", SYMLINK+=\"android%n\""
+        val result = Shell.exec("cat $RULES_FILE_PATH")
+        when {
+            !result.ok -> viewModel.toErrorState(result.error)
+            result.output.split('\n').contains(rule) -> tryReloadRules()
+            else -> tryAppendRule(rule)
+        }
+    }
+
+    private fun tryAppendRule(rule: String) {
+        val result = Shell.exec("echo '\n$rule' >> $RULES_FILE_PATH", sudoPassword)
+        when {
+            result.ok -> tryReloadRules()
+            else -> viewModel.toErrorState(result.error)
+        }
+    }
+
+    private fun tryReloadRules() {
+        val result = Shell.exec("udevadm control --reload-rules && udevadm trigger", sudoPassword)
+        if (!result.ok) {
+            return viewModel.toErrorState(result.error)
+        }
+        viewModel.toFinalState()
     }
 }
