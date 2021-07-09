@@ -28,9 +28,26 @@ compose.desktop {
     application {
         mainClass = "MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Deb)
             packageName = "GreenPain"
             packageVersion = "1.0.0"
         }
     }
+}
+
+tasks.withType<Jar>() {
+    manifest {
+        attributes["Main-Class"] = "MainKt"
+    }
+}
+
+tasks.register<Jar>("uberJar") {
+    archiveClassifier.set("uber")
+
+    from(sourceSets.main.get().output)
+
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
 }
