@@ -76,9 +76,6 @@ class Presenter(private val viewModel: ViewModel) {
 
     private fun findTargetDevices(extraDevices: List<Device>, allDevices: List<Device>): List<Device> {
         return allDevices.filter { !extraDevices.contains(it) }
-            .toMutableList().apply {
-                add(Device("1234", "Oneplus 7T"))
-            }
     }
 
     private fun addDeviceToSystemRules(device: Device) {
