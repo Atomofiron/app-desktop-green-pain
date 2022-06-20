@@ -1,4 +1,3 @@
-import androidx.compose.desktop.Window
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -15,24 +15,30 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 
 
-val Int.dpSize: Int get() = this.dp.value.toInt()
 val viewModel: ViewModel = ViewModel()
 val presenter: Presenter = Presenter(viewModel)
 
-fun main() = Window(
-    title = "Зелёная Боль",
-    size = IntSize(320.dpSize, 320.dpSize),
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter,
+fun main() = application {
+    val windowState = rememberWindowState(size = DpSize(320.dp, 320.dp))
+    Window(
+        onCloseRequest = ::exitApplication,
+        title = "Зелёная Боль",
+        state = windowState,
     ) {
-        content()
-        controls()
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            content()
+            controls()
+        }
     }
 }
 
@@ -100,6 +106,7 @@ fun button() = Button(
     Text(viewModel.btnText)
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun passwordField() {
     var value by remember { mutableStateOf("") }
@@ -126,13 +133,15 @@ fun passwordField() {
                 presenter.onPasswordConfirm()
             },
         ),
-        modifier = Modifier.padding(16.dp).focusRequester(focusRequester).onKeyEvent {
-            val isEnter = it.key == Key.Enter
-            if (isEnter && it.type == KeyEventType.KeyDown) {
-                presenter.onPasswordConfirm()
-            }
-            isEnter
-        },
+        modifier = Modifier.padding(16.dp)
+            .focusRequester(focusRequester)
+            .onKeyEvent {
+                val isEnter = it.key == Key.Enter
+                if (isEnter && it.type == KeyEventType.KeyDown) {
+                    presenter.onPasswordConfirm()
+                }
+                isEnter
+            },
     )
     post {
         focusRequester.requestFocus()

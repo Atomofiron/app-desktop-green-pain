@@ -3,24 +3,24 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.30"
-    id("org.jetbrains.compose") version "0.3.1"
+    kotlin("jvm") version "1.6.10"
+    id("org.jetbrains.compose") version "1.1.0"
 }
 
-group = "me.atomofiron"
+group = "app.atomofiron"
 version = "1.0"
 
 repositories {
-    jcenter()
+    google()
     mavenCentral()
-    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
 }
 
 dependencies {
     implementation(compose.desktop.currentOs)
 }
 
-tasks.withType<KotlinCompile>() {
+tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }
 
@@ -51,3 +51,9 @@ tasks.register<Jar>("uberJar") {
         configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
     })
 }
+
+/*
+useful links:
+
+https://github.com/JetBrains/compose-jb/blob/master/tutorials/Native_distributions_and_local_execution/README.md
+*/
